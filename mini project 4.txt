@@ -1,0 +1,58 @@
+data = read.csv(file.choose())
+str(data)
+
+# Null - The avearge customer service calls made by customers churn
+# True is equal to customer churn False
+aggregate(data$balance~data$y,
+          FUN=mean)
+t.test(data$balance~data$y)
+# There is relationship between y and balance
+chisq.test(table(data$y, data$job))
+# There is relationship between y and jobs
+# Binary Logistic Regression
+ylogit = glm(y~., data=data, family='binomial')
+summary(ylogit)
+ylogitpredict = predict(ylogit, type='response')
+table(Actual=data$y, Predict=ylogitpredict>0.5)
+(38940+1833) / (38940+1833+982+3456) # Accuracy = 90.18%
+
+# Decision Tree
+# Use Package "rpart"
+yrpart = rpart(y~., data=data)
+summary(yrpart)
+plot(yrpart)
+text(yrpart, cex = 0.50)
+rpart.plot(yrpart)
+yrpartpredict = predict(yrpart, type='class')
+table(Actual=data$y, Predict=yrpartpredict)
+(38904+1845) / (38904+1845+3444+1018) # Accuracy is 90.13%
+
+# RandomForest (3000 trees)
+# Use package "randomForest"
+yrfpart = randomForest(y~., data=data)
+print(yrfpart)
+plot(yrfpart)
+text(yrpart, cex = 0.50)
+rpart.plot(yrpart)
+yrpartpredict = predict(yrpart, type='class')
+table(Actual=data$y, Predict=yrpartpredict)
+(38904+1845) / (38904+1845+3444+1018) # Accuracy is 90.13%
+
+# Gradient Boosting Machines
+# Package "gbm
+library(gbm)
+data2 = data
+data2$y = ifelse(data2$y == "yes", 1, 0)
+ygbm = gbm(y~., data = data2, distribution ='bernoulli',
+               n.trees=3000, cv.folds = 3)
+bestiter=gbm.perf(ygbm,method = "cv")
+gbmpredict= predict(ygbm,data2,bestiter)
+table(data2$y,gbmpredict>0.5) 
+(39841+274) / (39841+274+5015+ 81) # Accuracy is 88.72%
+
+#neural networks
+ynet=nnet(y~., data = data,size=10,maxit=100)
+print(ynet)
+ynetpredict=predict(ynet,type = "class")
+table(data$y,ynetpredict)
+(37420+2448) / (37420+2448+2502+2481) # Accuracy is 88.88%
